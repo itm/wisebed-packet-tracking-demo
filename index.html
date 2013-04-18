@@ -4,54 +4,36 @@
 
 	<meta charset="utf-8">
 
-	<title>Dennis' dolle Demo</title>
+	<title>DDD - Dennis Dolle Demo</title>
 
 	<link rel="stylesheet" media="screen" href="bootstrap.css">
 	
 	<script type="text/javascript" src="jquery-1.9.1.js"></script>
 	<script type="text/javascript" src="bootstrap.js"></script>
 	
-	<script type="text/javascript" src="decoder.js"></script>
+	<script type="text/javascript" src="pt_packet.js"></script>
 
 	<script type="text/javascript">
-		$(function() {
-			var arr = new Uint8Array(9+23);
-			var i=0;
-			arr[i++] = 108;
-			arr[i++] = 33;
-			arr[i++] = 16;
-			arr[i++] = 255;
-			arr[i++] = 255;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 23;
-			arr[i++] = 107;
-			arr[i++] = 59;
-			arr[i++] = 4;
-			arr[i++] = 64;
-			arr[i++] = 1;
-			arr[i++] = 58;
-			arr[i++] = 2;
-			arr[i++] = 133;
-			arr[i++] = 0;
-			arr[i++] = 56;
-			arr[i++] = 14;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 1;
-			arr[i++] = 1;
-			arr[i++] = 33;
-			arr[i++] = 16;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 0;
-			arr[i++] = 0;
 
-			var myPacket = new PTPacket(arr);
-			console.log(myPacket.toString());
+		function sendPacket(i) {
+			
+			var payload = new Uint8Array(2);
+			payload[0] = (i >> 8) & 255;
+			payload[1] = (i >> 0) & 255;
+
+			var packet;
+			if (i % 2 == 0) {
+				packet = PTPacket.create(1, 2, payload);
+			} else {
+				packet = PTPacket.create(2, 3, payload);
+			}
+
+			
+		}
+
+		$(function() {
+
+			var totalNumberOfPackets = 100;
 
 			var env = {
 				testbedId : 1,
@@ -62,7 +44,18 @@
 			var userScript = new WiseGuiUserScript();
 			userScript.start(env);
 
-			// do sth
+			// simulate packets being sent
+
+			var i=0;
+			var schedule;
+			schedule = window.setInterval(function() {
+				i = (i == Number.MAX_VALUE) ? 0 : i++;
+				sendPacket(i++);
+				if (i == totalNumberOfPackets) {
+					window.clearInterval(schedule);
+				}
+				$('#DivPacketCount').text("# " + i);
+			}, 200);
 
 			userScript.stop();
 		})
@@ -72,6 +65,7 @@
 
 <body>
 	<div id="WisebedContainer" class="container"></div>
+	<div id="DivPacketCount"></div>
 </body>
 
 </html>
