@@ -7,6 +7,19 @@
 	<title>DDD - Dennis Dolle Demo</title>
 
 	<link rel="stylesheet" media="screen" href="bootstrap.css">
+	<style type="text/css">
+		body {
+			margin-top: 10px;
+		}
+		#DivPacketCount {
+			position: absolute;
+			background-color: black;
+			color: white;
+			top: 10px;
+			right: 10px;
+		}
+	</style>
+
 	
 	<script type="text/javascript" src="jquery-1.9.1.js"></script>
 	<script type="text/javascript" src="bootstrap.js"></script>
@@ -14,8 +27,69 @@
 	<script type="text/javascript" src="pt_packet.js"></script>
 
 	<script type="text/javascript">
+		
+		WiseGuiUserScript = function() {
+		  console.log("WiseGuiUserScript instantiated...");
+		  this.testbedId = null;
+		  this.experimentId = null;
+		  this.webSocket = null;
+		  this.outputDiv = null;
+		  this.outputTextArea = null;
+		};
 
-		function sendPacket(i) {
+		WiseGuiUserScript.prototype.start = function(env) {
+		  console.log("Starting user script...");
+		  this.testbedId = env.testbedId;
+		  this.experimentId = env.experimentId;
+		  this.outputDiv = env.outputDiv;
+		  this.outputDiv.empty();
+		  this.outputTextArea = $("<textarea class='span12' style='height:500px'/>");
+		  this.outputDiv.append(this.outputTextArea);
+		  
+		  /*
+		  var self = this;
+		  this.webSocket = new Wisebed.WebSocket(
+		      this.testbedId,
+		      this.experimentId,
+		      function() {self.onmessage(arguments);},
+		      function() {self.onopen(arguments);},
+		      function() {self.onclosed(arguments);}
+		  );
+		*/
+		  // TODO implement me
+		};
+
+		WiseGuiUserScript.prototype.stop = function() {
+		  console.log("Stopping user script...");
+		  //this.webSocket.close();
+		  // TODO implement me
+		};
+
+		WiseGuiUserScript.prototype.onmessage = function(message) {
+		  this.outputTextArea.html(this.outputTextArea.html() + "\n" + JSON.stringify(message));
+		  var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) {
+			return c.charCodeAt(0);
+		  }));
+		  console.log(payload);
+		};
+
+		WiseGuiUserScript.prototype.onopen = function(event) {
+		  console.log(event);
+		  this.outputTextArea.html(this.outputTextArea.html() + "\nConnection opened!");
+		  // TODO implement me
+		};
+
+		WiseGuiUserScript.prototype.onclosed = function(event) {
+		  console.log(event);
+		  this.outputTextArea.html(this.outputTextArea.html() + "\nConnection closed!");
+		  // TODO implement me
+		};
+
+	</script>
+
+	<script type="text/javascript">
+
+		function sendPacket(userScript, i) {
 			
 			var payload = new Uint8Array(2);
 			payload[0] = (i >> 8) & 255;
@@ -27,13 +101,22 @@
 			} else {
 				packet = PTPacket.create(2, 3, payload);
 			}
-
 			
+			var base64EncodedPacket = btoa(String.fromCharCode.apply(null, packet.buffer));
+			var message = {
+				payloadBase64 : base64EncodedPacket,
+				sourceNodeUrn : "urn:wisebed:uzl1:0x" + packet.getSource().toString(16),
+				timestamp     : new Date().toISOString(),
+				type          : "upstream"
+			}
+
+			userScript.onmessage(message);
 		}
 
 		$(function() {
 
-			var totalNumberOfPackets = 100;
+			var totalNumberOfPackets = 30;
+			var delay = 200;
 
 			var env = {
 				testbedId : 1,
@@ -44,20 +127,20 @@
 			var userScript = new WiseGuiUserScript();
 			userScript.start(env);
 
-			// simulate packets being sent
-
 			var i=0;
 			var schedule;
 			schedule = window.setInterval(function() {
+
 				i = (i == Number.MAX_VALUE) ? 0 : i++;
-				sendPacket(i++);
+				sendPacket(userScript, i++);
+				$('#DivPacketCount').html("&nbsp;#&nbsp;" + i + "&nbsp;");
+
 				if (i == totalNumberOfPackets) {
 					window.clearInterval(schedule);
+					userScript.stop();
 				}
-				$('#DivPacketCount').text("# " + i);
-			}, 200);
-
-			userScript.stop();
+				
+			}, delay);
 		})
 	</script>
 
