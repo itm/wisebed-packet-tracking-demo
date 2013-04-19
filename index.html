@@ -39,12 +39,6 @@
 			fill: #000;
 		}
 
-		.cursor {
-			fill: none;
-			stroke: brown;
-			pointer-events: none;
-		}
-
 		.link {
 			
 		}
@@ -71,6 +65,19 @@
 			this.macToNode = {};
 			this.lastLinkId = 0;
 			this.colors = [
+				{r:054,g:097,b:171},
+				{r:186,g:215,b:187},
+				{r:220,g:150,b:187},
+				{r:223,g:184,b:043},
+				{r:251,g:242,b:095},
+				{r:160,g:155,b:202},
+				{r:161,g:082,b:042},
+				{r:216,g:130,b:130},
+				{r:180,g:204,b:236},
+				{r:089,g:153,b:080},
+				{r:151,g:049,b:061},
+				{r:102,g:053,b:119}
+				/*
 				{r:000,g:000,b:000},
 				{r:255,g:000,b:000},
 				{r:000,g:255,b:000},
@@ -79,6 +86,7 @@
 				{r:000,g:255,b:255},
 				{r:255,g:000,b:255},
 				{r:192,g:192,b:192}
+				*/
 			];
 		};
 
@@ -225,7 +233,7 @@
 				linkId: this.lastLinkId,
 				source: this.nodeToD3Node[sourceNode.id],
 				target: this.nodeToD3Node[targetNode.id],
-				style: "stroke: rgb("+color.r+","+color.g+","+color.b+")"
+				style: "stroke: rgb("+color.r+","+color.g+","+color.b+"); stroke-width: 4;"
 			};
 
 			this.links.push(newLink);
