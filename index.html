@@ -46,7 +46,7 @@
 		}
 
 		.link {
-			stroke: #999;
+			
 		}
 
 	</style>
@@ -70,6 +70,16 @@
 			this.nodeToD3Node = {};
 			this.macToNode = {};
 			this.lastLinkId = 0;
+			this.colors = [
+				{r:000,g:000,b:000},
+				{r:255,g:000,b:000},
+				{r:000,g:255,b:000},
+				{r:000,g:000,b:255},
+				{r:255,g:255,b:000},
+				{r:000,g:255,b:255},
+				{r:255,g:000,b:255},
+				{r:192,g:192,b:192}
+			];
 		};
 
 		WiseGuiUserScript.prototype.start = function(env) {
@@ -125,7 +135,8 @@
 			      .attr("x1", function(d) { return d.source.x; })
 			      .attr("y1", function(d) { return d.source.y; })
 			      .attr("x2", function(d) { return d.target.x; })
-			      .attr("y2", function(d) { return d.target.y; });
+			      .attr("y2", function(d) { return d.target.y; })
+			      .attr("style", function(d) { return d.style; });
 
 			  self.node
 			      .attr("cx", function(d) { return d.x; })
@@ -207,24 +218,30 @@
 			this.force.start(); // ?
 		}
 
-		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode) {
+		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode,color) {
 			
 			this.lastLinkId = (this.lastLinkId + 1) % Number.MAX_VALUE;
-			var link = {source: this.nodeToD3Node[sourceNode.id], target: this.nodeToD3Node[targetNode.id], linkId: this.lastLinkId};
+			var newLink = {
+				linkId: this.lastLinkId,
+				source: this.nodeToD3Node[sourceNode.id],
+				target: this.nodeToD3Node[targetNode.id],
+				style: "stroke: rgb("+color.r+","+color.g+","+color.b+")"
+			};
 
-			this.links.push(link);
+			this.links.push(newLink);
 
 			this.link = this.svg.selectAll('.link');
-			this.link = this.link.data(this.links, function(link) { return link.linkId; });
+			this.link = this.link.data(this.links, function(o) { return o.linkId; });
 
 			this.link
 				.enter()
 				.insert("line", ".link")
-				.attr("class", "link");
+				.attr("class", "link")
+				.attr("style", newLink.style);
 
 			this.force.start();
 
-			return link;
+			return newLink;
 		}
 
 		WiseGuiUserScript.prototype.removeLink = function (link) {
@@ -250,12 +267,14 @@
 			var sourceNode = this.macToNode[''+packet.getSource()];
 			var targetNode = this.macToNode[''+packet.getDestination()];
 
-			var link = this.addLink(sourceNode, targetNode);
+			var color = this.colors[packet.getTag() % this.colors.length];
+
+			var link = this.addLink(sourceNode, targetNode, color);
 			var self = this;
 			
 			window.setTimeout(function() {
 				self.removeLink(link);
-			}, 300);
+			}, 1500);
 		};
 
 		WiseGuiUserScript.prototype.onopen = function(event) {
@@ -270,11 +289,17 @@
 
 	<script type="text/javascript">
 
-		function sendPacket(userScript, srcNodeUrn, dstNodeUrn) {
+		var lastTag = 0;
+
+		function sendPacket(userScript, srcNodeUrn, dstNodeUrn, demoIteration) {
+
+			if (demoIteration % 5 == 0) {
+				lastTag = (lastTag +1) % Number.MAX_VALUE;
+			}
 
 			var payload = new Uint8Array(2);
-			payload[0] = (srcNodeUrn.getMac() >> 8) & 255;
-			payload[1] = (srcNodeUrn.getMac() >> 0) & 255;
+			payload[0] = (lastTag >> 8) & 255;
+			payload[1] = (lastTag >> 0) & 255;
 
 			var packet = PTPacket.create(srcNodeUrn.getMac(), dstNodeUrn.getMac(), payload);
 			
@@ -304,13 +329,13 @@
 		$(function() {
 
 			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
-			var experimentNodes = isense48Nodes.slice(0, 3);
+			var experimentNodes = isense48Nodes.slice(0, isense48Nodes.length);
 			var experimentNodesUrns = experimentNodes.map(function(node) { return new NodeUrn(node.id); });
 			
 			console.log(experimentNodes);
 
 			var totalNumberOfPackets = 3000;
-			var delay = 200;
+			var delay = 500;
 
 			var env = {
 				testbedId : 1,
@@ -329,7 +354,7 @@
 				j = i % experimentNodesUrns.length;
 				k = (i + 1) % experimentNodesUrns.length;
 
-				sendPacket(userScript, experimentNodesUrns[j], experimentNodesUrns[k]);
+				sendPacket(userScript, experimentNodesUrns[j], experimentNodesUrns[k], i);
 
 				$('#DivPacketCount').html("&nbsp;#&nbsp;" + i + "&nbsp;");
 
