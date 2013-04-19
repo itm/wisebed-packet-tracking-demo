@@ -22,12 +22,31 @@
 		}
 
 		#DemoCanvas {
-			/*background-size: 100% auto;
+			background-size: 100% auto;
 			background-image: url(floorplan_testbed_uzl.png);
-			background-repeat: no-repeat;*/
+			background-repeat: no-repeat;
 			border: 1px solid black;
-			width: 500px;
-			height: 500px;
+			width: 100%;
+			height: 1000px;
+		}
+
+		rect {
+			fill: none;
+			pointer-events: all;
+		}
+
+		.node {
+			fill: #000;
+		}
+
+		.cursor {
+			fill: none;
+			stroke: brown;
+			pointer-events: none;
+		}
+
+		.link {
+			stroke: #999;
 		}
 
 	</style>
@@ -38,7 +57,7 @@
 	
 	<script type="text/javascript" src="pt_packet.js"></script>
 	<script type="text/javascript" src="wiseml.js"></script>
-	<script type="text/javascript" src="sigma.min.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
 
 	<script type="text/javascript">
 		
@@ -58,33 +77,62 @@
 			this.experimentId = env.experimentId;
 			this.outputDiv = env.outputDiv;
 
-			// TODO: load WiseML from testbed
-			console.log(this.outputDiv[0]);
-			var graph = sigma.init(this.outputDiv[0]);
-			graph.drawingProperties({
-    defaultLabelColor: '#fff',
-    defaultLabelSize: 14,
-    defaultLabelBGColor: '#fff',
-    defaultLabelHoverColor: '#000',
-    labelThreshold: 6,
-    defaultEdgeType: 'curve'
-  }).graphProperties({
-    minNodeSize: 0.5,
-    maxNodeSize: 5,
-    minEdgeSize: 1,
-    maxEdgeSize: 1
-  }).mouseProperties({
-    maxRatio: 4
-  });
-			graph.addNode('hello',{
-				label: 'Hello',
-				color: '#ff0000'
-			}).addNode('world',{
-				label: 'World !',
-				color: '#00ff00'
-			}).addEdge('hello_world','hello','world');
+			var width = $('#DemoCanvas').width(), height = $('#DemoCanvas').height();
 
-			graph.draw();
+			var fill = d3.scale.category20();
+
+			var force = d3.layout.force()
+			    .size([width, height])
+			    .nodes([]) // initialize with a single node
+			    .linkDistance(30)
+			    .charge(-60)
+			    .on("tick", tick);
+
+			var svg = d3.select("#DemoCanvas").append("svg")
+			    .attr("width", width)
+			    .attr("height", height);
+
+			svg.append("rect")
+			    .attr("width", width)
+			    .attr("height", height);
+
+			var nodes = force.nodes(),
+			    links = force.links(),
+			    node = svg.selectAll(".node"),
+			    link = svg.selectAll(".link");
+
+			var cursor = svg.append("circle")
+			    .attr("r", 30)
+			    .attr("transform", "translate(-100,-100)")
+			    .attr("class", "cursor");
+
+			this.svg = svg;
+			this.force = force;
+			this.nodes = nodes;
+			this.links = links;
+			this.node = node;
+			this.link = link;
+
+			this.redraw();
+
+			var self = this;
+
+			function tick() {
+			  self.link
+			      .attr("x1", function(d) { return d.source.x; })
+			      .attr("y1", function(d) { return d.source.y; })
+			      .attr("x2", function(d) { return d.target.x; })
+			      .attr("y2", function(d) { return d.target.y; });
+
+			  self.node
+			      .attr("cx", function(d) { return d.x; })
+			      .attr("cy", function(d) { return d.y; });
+			}
+
+			// TODO: load WiseML from testbed
+			wiseml.setup.node
+				.filter(function(node) { return node.nodeType == "isense48"; })
+				.forEach(function(node) { self.addNode(node); });
 
 			/*
 			var self = this;
@@ -96,6 +144,56 @@
 			  function() {self.onclosed(arguments);}
 			);
 			*/
+		};
+
+		WiseGuiUserScript.prototype.redraw = function() {
+
+			this.link = this.link.data(this.links);
+
+			this.link
+				.enter()
+				.insert("line", ".node")
+				.attr("class", "link");
+
+			this.node = this.svg.selectAll(".node");
+			this.node = this.node.data(this.nodes);
+
+			this.node
+				.enter()
+				.insert("circle", ".cursor")
+				.attr("class", "node")
+				.attr("r", 15)
+				.call(this.force.drag);
+
+			this.force.start();
+		}
+
+		WiseGuiUserScript.prototype.mapPosXY = function(node) {
+			return {
+				x: node.position.x * 30,
+				y: node.position.y * 30
+			};
+		}
+
+		WiseGuiUserScript.prototype.addNode = function (sourceNode) {
+			var pos = this.mapPosXY(sourceNode);
+			var node = {x: pos.x, y: pos.y, fixed: true};
+			this.nodes.push(node);
+			this.redraw();
+		}
+
+		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode) {
+			
+		}
+
+		WiseGuiUserScript.prototype.removeLink = function (sourceNode,targetNode) {
+			for(var i=0;i<links.length;i++) {
+				if(links[i].source.id == source && links[i].target.id == target) {
+					links.splice(i,1);
+					break;
+				}
+			}
+			update();
 		};
 
 		WiseGuiUserScript.prototype.stop = function() {
@@ -196,7 +294,7 @@
 </head>
 
 <body>
-	<canvas id="DemoCanvas"></canvas>
+	<div id="DemoCanvas"></div>
 	<div id="DivPacketCount"></div>
 </body>
 
