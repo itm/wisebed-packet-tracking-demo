@@ -57,7 +57,7 @@
 	
 	<script type="text/javascript" src="pt_packet.js"></script>
 	<script type="text/javascript" src="wiseml.js"></script>
-	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script type="text/javascript" src="d3.v3.js"></script>
 
 	<script type="text/javascript">
 		
@@ -67,6 +67,9 @@
 			this.experimentId = null;
 			this.webSocket = null;
 			this.outputDiv = null;
+			this.nodeToD3Node = {};
+			this.macToNode = {};
+			this.lastLinkId = 0;
 		};
 
 		WiseGuiUserScript.prototype.start = function(env) {
@@ -132,7 +135,11 @@
 			// TODO: load WiseML from testbed
 			wiseml.setup.node
 				.filter(function(node) { return node.nodeType == "isense48"; })
-				.forEach(function(node) { self.addNode(node); });
+				.forEach(function(node) {
+					self.addNode(node);
+					var mac = new NodeUrn(node.id).getMac();
+					self.macToNode[''+mac] = node;
+				});
 
 			/*
 			var self = this;
@@ -148,6 +155,7 @@
 
 		WiseGuiUserScript.prototype.redraw = function() {
 
+			/*
 			this.link = this.link.data(this.links);
 
 			this.link
@@ -166,6 +174,7 @@
 				.call(this.force.drag);
 
 			this.force.start();
+			*/
 		}
 
 		WiseGuiUserScript.prototype.mapPosXY = function(node) {
@@ -176,24 +185,56 @@
 		}
 
 		WiseGuiUserScript.prototype.addNode = function (sourceNode) {
+			
 			var pos = this.mapPosXY(sourceNode);
-			var node = {x: pos.x, y: pos.y, fixed: true};
+			var node = {x: pos.x, y: pos.y, fixed: true, nodeUrn: sourceNode.id};
+			
+			this.nodeToD3Node[sourceNode.id] = node;
 			this.nodes.push(node);
-			this.redraw();
+
+			//this.redraw();
+			
+			this.node = this.svg.selectAll('.node');
+			this.node = this.node.data(this.nodes, function(node) { return node.nodeUrn; });
+
+			this.node
+				.enter()
+				.insert("circle", ".cursor")
+				.attr("class", "node")
+				.attr("r", 15)
+				.call(this.force.drag);
+
+			this.force.start(); // ?
 		}
 
 		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode) {
 			
+			this.lastLinkId = (this.lastLinkId + 1) % Number.MAX_VALUE;
+			var link = {source: this.nodeToD3Node[sourceNode.id], target: this.nodeToD3Node[targetNode.id], linkId: this.lastLinkId};
+
+			this.links.push(link);
+
+			this.link = this.svg.selectAll('.link');
+			this.link = this.link.data(this.links, function(link) { return link.linkId; });
+
+			this.link
+				.enter()
+				.insert("line", ".link")
+				.attr("class", "link");
+
+			this.force.start();
+
+			return link;
 		}
 
-		WiseGuiUserScript.prototype.removeLink = function (sourceNode,targetNode) {
-			for(var i=0;i<links.length;i++) {
-				if(links[i].source.id == source && links[i].target.id == target) {
-					links.splice(i,1);
-					break;
-				}
-			}
-			update();
+		WiseGuiUserScript.prototype.removeLink = function (link) {
+			
+			this.links.splice(this.links.indexOf(link), 1);
+			
+			this.link = this.link.data(this.links);
+			this.link.exit().remove();
+			
+			this.force.start();
 		};
 
 		WiseGuiUserScript.prototype.stop = function() {
@@ -202,9 +243,19 @@
 		};
 
 		WiseGuiUserScript.prototype.onmessage = function(message) {
+
 			var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) { return c.charCodeAt(0); }));
 			var packet = PTPacket.parse(payload);
-			console.log(packet.toString());
+
+			var sourceNode = this.macToNode[''+packet.getSource()];
+			var targetNode = this.macToNode[''+packet.getDestination()];
+
+			var link = this.addLink(sourceNode, targetNode);
+			var self = this;
+			
+			window.setTimeout(function() {
+				self.removeLink(link);
+			}, 300);
 		};
 
 		WiseGuiUserScript.prototype.onopen = function(event) {
@@ -258,7 +309,7 @@
 			
 			console.log(experimentNodes);
 
-			var totalNumberOfPackets = 30;
+			var totalNumberOfPackets = 3000;
 			var delay = 200;
 
 			var env = {
