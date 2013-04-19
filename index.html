@@ -8,9 +8,11 @@
 
 	<link rel="stylesheet" media="screen" href="bootstrap.css">
 	<style type="text/css">
+
 		body {
-			margin-top: 10px;
+			margin: 10px;
 		}
+
 		#DivPacketCount {
 			position: absolute;
 			background-color: black;
@@ -18,6 +20,16 @@
 			top: 10px;
 			right: 10px;
 		}
+
+		#DemoCanvas {
+			/*background-size: 100% auto;
+			background-image: url(floorplan_testbed_uzl.png);
+			background-repeat: no-repeat;*/
+			border: 1px solid black;
+			width: 500px;
+			height: 500px;
+		}
+
 	</style>
 
 	
@@ -25,87 +37,102 @@
 	<script type="text/javascript" src="bootstrap.js"></script>
 	
 	<script type="text/javascript" src="pt_packet.js"></script>
+	<script type="text/javascript" src="wiseml.js"></script>
+	<script type="text/javascript" src="sigma.min.js"></script>
 
 	<script type="text/javascript">
 		
 		WiseGuiUserScript = function() {
-		  console.log("WiseGuiUserScript instantiated...");
-		  this.testbedId = null;
-		  this.experimentId = null;
-		  this.webSocket = null;
-		  this.outputDiv = null;
-		  this.outputTextArea = null;
+			console.log("WiseGuiUserScript instantiated...");
+			this.testbedId = null;
+			this.experimentId = null;
+			this.webSocket = null;
+			this.outputDiv = null;
 		};
 
 		WiseGuiUserScript.prototype.start = function(env) {
-		  console.log("Starting user script...");
-		  this.testbedId = env.testbedId;
-		  this.experimentId = env.experimentId;
-		  this.outputDiv = env.outputDiv;
-		  this.outputDiv.empty();
-		  this.outputTextArea = $("<textarea class='span12' style='height:500px'/>");
-		  this.outputDiv.append(this.outputTextArea);
-		  
-		  /*
-		  var self = this;
-		  this.webSocket = new Wisebed.WebSocket(
-		      this.testbedId,
-		      this.experimentId,
-		      function() {self.onmessage(arguments);},
-		      function() {self.onopen(arguments);},
-		      function() {self.onclosed(arguments);}
-		  );
-		*/
-		  // TODO implement me
+			
+			console.log("Starting user script...");
+
+			this.testbedId = env.testbedId;
+			this.experimentId = env.experimentId;
+			this.outputDiv = env.outputDiv;
+
+			// TODO: load WiseML from testbed
+			console.log(this.outputDiv[0]);
+			var graph = sigma.init(this.outputDiv[0]);
+			graph.drawingProperties({
+    defaultLabelColor: '#fff',
+    defaultLabelSize: 14,
+    defaultLabelBGColor: '#fff',
+    defaultLabelHoverColor: '#000',
+    labelThreshold: 6,
+    defaultEdgeType: 'curve'
+  }).graphProperties({
+    minNodeSize: 0.5,
+    maxNodeSize: 5,
+    minEdgeSize: 1,
+    maxEdgeSize: 1
+  }).mouseProperties({
+    maxRatio: 4
+  });
+			graph.addNode('hello',{
+				label: 'Hello',
+				color: '#ff0000'
+			}).addNode('world',{
+				label: 'World !',
+				color: '#00ff00'
+			}).addEdge('hello_world','hello','world');
+
+			graph.draw();
+
+			/*
+			var self = this;
+			this.webSocket = new Wisebed.WebSocket(
+			  this.testbedId,
+			  this.experimentId,
+			  function() {self.onmessage(arguments);},
+			  function() {self.onopen(arguments);},
+			  function() {self.onclosed(arguments);}
+			);
+			*/
 		};
 
 		WiseGuiUserScript.prototype.stop = function() {
-		  console.log("Stopping user script...");
-		  //this.webSocket.close();
-		  // TODO implement me
+			console.log("Stopping user script...");
+			//this.webSocket.close();
 		};
 
 		WiseGuiUserScript.prototype.onmessage = function(message) {
-		  this.outputTextArea.html(this.outputTextArea.html() + "\n" + JSON.stringify(message));
-		  var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) {
-			return c.charCodeAt(0);
-		  }));
-		  console.log(payload);
+			var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) { return c.charCodeAt(0); }));
+			var packet = PTPacket.parse(payload);
+			console.log(packet.toString());
 		};
 
 		WiseGuiUserScript.prototype.onopen = function(event) {
-		  console.log(event);
-		  this.outputTextArea.html(this.outputTextArea.html() + "\nConnection opened!");
-		  // TODO implement me
+			console.log(event);
 		};
 
 		WiseGuiUserScript.prototype.onclosed = function(event) {
-		  console.log(event);
-		  this.outputTextArea.html(this.outputTextArea.html() + "\nConnection closed!");
-		  // TODO implement me
+			console.log(event);
 		};
 
 	</script>
 
 	<script type="text/javascript">
 
-		function sendPacket(userScript, i) {
-			
-			var payload = new Uint8Array(2);
-			payload[0] = (i >> 8) & 255;
-			payload[1] = (i >> 0) & 255;
+		function sendPacket(userScript, srcNodeUrn, dstNodeUrn) {
 
-			var packet;
-			if (i % 2 == 0) {
-				packet = PTPacket.create(1, 2, payload);
-			} else {
-				packet = PTPacket.create(2, 3, payload);
-			}
+			var payload = new Uint8Array(2);
+			payload[0] = (srcNodeUrn.getMac() >> 8) & 255;
+			payload[1] = (srcNodeUrn.getMac() >> 0) & 255;
+
+			var packet = PTPacket.create(srcNodeUrn.getMac(), dstNodeUrn.getMac(), payload);
 			
 			var base64EncodedPacket = btoa(String.fromCharCode.apply(null, packet.buffer));
 			var message = {
 				payloadBase64 : base64EncodedPacket,
-				sourceNodeUrn : "urn:wisebed:uzl1:0x" + packet.getSource().toString(16),
+				sourceNodeUrn : srcNodeUrn.nodeUrnString,
 				timestamp     : new Date().toISOString(),
 				type          : "upstream"
 			}
@@ -113,7 +140,25 @@
 			userScript.onmessage(message);
 		}
 
+		var NodeUrn = function(nodeUrnString) {
+
+			this.nodeUrnString = nodeUrnString;
+
+			this.getSuffix = function() {
+				return this.nodeUrnString.substring(this.nodeUrnString.lastIndexOf(':') + 1);
+			}
+			this.getMac = function() {
+				return parseInt(this.getSuffix());
+			}
+		};
+
 		$(function() {
+
+			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
+			var experimentNodes = isense48Nodes.slice(0, 3);
+			var experimentNodesUrns = experimentNodes.map(function(node) { return new NodeUrn(node.id); });
+			
+			console.log(experimentNodes);
 
 			var totalNumberOfPackets = 30;
 			var delay = 200;
@@ -121,18 +166,22 @@
 			var env = {
 				testbedId : 1,
 				experimentId : 2,
-				outputDiv : $("#WisebedContainer")
+				outputDiv : $("#DemoCanvas")
 			};
 
 			var userScript = new WiseGuiUserScript();
 			userScript.start(env);
 
-			var i=0;
+			var i=0, j=0, k=0;
 			var schedule;
 			schedule = window.setInterval(function() {
 
-				i = (i == Number.MAX_VALUE) ? 0 : i++;
-				sendPacket(userScript, i++);
+				i = (i == Number.MAX_VALUE) ? 0 : i+1;
+				j = i % experimentNodesUrns.length;
+				k = (i + 1) % experimentNodesUrns.length;
+
+				sendPacket(userScript, experimentNodesUrns[j], experimentNodesUrns[k]);
+
 				$('#DivPacketCount').html("&nbsp;#&nbsp;" + i + "&nbsp;");
 
 				if (i == totalNumberOfPackets) {
@@ -147,7 +196,7 @@
 </head>
 
 <body>
-	<div id="WisebedContainer" class="container"></div>
+	<canvas id="DemoCanvas"></canvas>
 	<div id="DivPacketCount"></div>
 </body>
 
