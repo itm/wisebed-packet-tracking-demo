@@ -44,6 +44,32 @@
 			stroke-width: 4;
 		}
 
+		.c0  { stroke: rgb(054,097,171); stroke-width: 4; }
+		.c1  { stroke: rgb(186,215,187); stroke-width: 4; }
+		.c2  { stroke: rgb(220,150,187); stroke-width: 4; }
+		.c3  { stroke: rgb(223,184,043); stroke-width: 4; }
+		.c4  { stroke: rgb(251,242,095); stroke-width: 4; }
+		.c5  { stroke: rgb(160,155,202); stroke-width: 4; }
+		.c6  { stroke: rgb(161,082,042); stroke-width: 4; }
+		.c7  { stroke: rgb(216,130,130); stroke-width: 4; }
+		.c8  { stroke: rgb(180,204,236); stroke-width: 4; }
+		.c9  { stroke: rgb(089,153,080); stroke-width: 4; }
+		.c10 { stroke: rgb(151,049,061); stroke-width: 4; }
+		.c11 { stroke: rgb(102,053,119); stroke-width: 4; }
+
+		#marker0  { fill: rgb(054,097,171); }
+		#marker1  { fill: rgb(186,215,187); }
+		#marker2  { fill: rgb(220,150,187); }
+		#marker3  { fill: rgb(223,184,043); }
+		#marker4  { fill: rgb(251,242,095); }
+		#marker5  { fill: rgb(160,155,202); }
+		#marker6  { fill: rgb(161,082,042); }
+		#marker7  { fill: rgb(216,130,130); }
+		#marker8  { fill: rgb(180,204,236); }
+		#marker9  { fill: rgb(089,153,080); }
+		#marker10 { fill: rgb(151,049,061); }
+		#marker11 { fill: rgb(102,053,119); }
+
 	</style>
 
 	
@@ -65,30 +91,8 @@
 			this.nodeToD3Node = {};
 			this.macToNode = {};
 			this.lastLinkId = 0;
-			this.colors = [
-				{r:054,g:097,b:171},
-				{r:186,g:215,b:187},
-				{r:220,g:150,b:187},
-				{r:223,g:184,b:043},
-				{r:251,g:242,b:095},
-				{r:160,g:155,b:202},
-				{r:161,g:082,b:042},
-				{r:216,g:130,b:130},
-				{r:180,g:204,b:236},
-				{r:089,g:153,b:080},
-				{r:151,g:049,b:061},
-				{r:102,g:053,b:119}
-				/*
-				{r:000,g:000,b:000},
-				{r:255,g:000,b:000},
-				{r:000,g:255,b:000},
-				{r:000,g:000,b:255},
-				{r:255,g:255,b:000},
-				{r:000,g:255,b:255},
-				{r:255,g:000,b:255},
-				{r:192,g:192,b:192}
-				*/
-			];
+			this.colors = 12;
+
 		};
 
 		WiseGuiUserScript.prototype.start = function(env) {
@@ -113,13 +117,27 @@
 			    .charge(-60)
 			    .start();
 
-			this.svg = d3.select("#DemoCanvas").append("svg")
+			this.svg = d3
+				.select("#DemoCanvas")
+				.append("svg")
 			    .attr("width", width)
 			    .attr("height", height);
 
-			this.svg.append("rect")
-			    .attr("width", width)
-			    .attr("height", height);
+			this.svg
+				.append("svg:defs")
+				.selectAll("marker")
+    			.data(["marker0", "marker1", "marker2", "marker3", "marker4", "marker5", "marker6", "marker7", "marker8", "marker9", "marker10", "marker11"])
+    			.enter()
+				.append("svg:marker")
+				.attr("id", String)
+				.attr("viewBox", "0 -5 10 10")
+				.attr("refX", 5)
+				.attr("markerWidth", 4)
+				.attr("markerHeight", 4)
+				.attr("orient", "auto")
+				.attr("class", "arrow")
+				.append("svg:path")
+				.attr("d", "M 0 -5 L 10 0 L 0 5");
 
 			// TODO: load WiseML from testbed
 			var self = this;
@@ -173,14 +191,14 @@
 		WiseGuiUserScript.prototype.nodeIdFun = function(node) { return node.nodeUrn; }
 		WiseGuiUserScript.prototype.linkIdFun = function(o) { return o.linkId; }
 
-		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode,color) {
+		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode,cssClass,markerId) {
 			
 			this.lastLinkId = (this.lastLinkId + 1) % Number.MAX_VALUE;
 			var newLink = {
 				linkId: this.lastLinkId,
 				source: this.nodeToD3Node[sourceNode.id],
 				target: this.nodeToD3Node[targetNode.id],
-				style: "stroke: rgb("+color.r+","+color.g+","+color.b+"); stroke-width: 4;"
+				cssClass: cssClass
 			};
 
 			this.links.push(newLink);
@@ -190,13 +208,12 @@
 				.data(this.links, this.linkIdFun)
 				.enter()
 				.insert("line", ".link")
-				.attr("class", "link")
-				.attr("style", newLink.style)
 				.attr("x1", function(d) { return d.source.x; })
 				.attr("y1", function(d) { return d.source.y; })
 				.attr("x2", function(d) { return d.target.x; })
 				.attr("y2", function(d) { return d.target.y; })
-				.attr("style", function(d) { return d.style; });
+				.attr("class", function(d) { return "link " + d.cssClass; })
+				.attr("marker-end", function(d) { return "url(#"+ markerId +")"; });
 
 			this.force.start();
 
@@ -229,9 +246,10 @@
 			var sourceNode = this.macToNode[''+packet.getSource()];
 			var targetNode = this.macToNode[''+packet.getDestination()];
 
-			var color = this.colors[packet.getTag() % this.colors.length];
+			var cssClass = "c" + (packet.getTag() % this.colors);
+			var markerId = "marker" + (packet.getTag() % this.colors);
 
-			var link = this.addLink(sourceNode, targetNode, color);
+			var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
 			var self = this;
 			
 			window.setTimeout(function() { self.removeLink(link); }, 1500);
