@@ -7,6 +7,7 @@ var PTPacket = function(buffer) {
 	this.getSource      = function() { return (buffer[1] << 8) + buffer[2]; }
 	this.getDestination = function() { return (buffer[3] << 8) + buffer[4]; }
 	this.getLinkMetric  = function() { return (buffer[5] << 8) + buffer[6]; }
+	this.getLength      = function() { return (buffer[7] << 8) + buffer[8]; }
 	this.getTag         = function() { return (buffer[9] << 8) + buffer[10]; } // TODO anpassing
 	this.getPayload     = function() {
 		var payload = new Uint8Array(buffer.length - 9);
@@ -15,6 +16,7 @@ var PTPacket = function(buffer) {
 		}
 		return payload;
 	}
+
 	this.toString       = function() {
 		
 		var uint8ArrayToString = function(buffer) {
@@ -42,8 +44,17 @@ var PTPacket = function(buffer) {
 	}
 }
 
+PTPacket.PACKET_TYPE = 108;
+
 // "constructor" to parse packets
 PTPacket.parse = function(buffer) {
+	if (Array.isArray(buffer)) {
+		var buf = new Uint8Array(buffer.length);
+		for (var i=0; i<buffer.length; i++) {
+			buf[i] = buffer[i];
+		}
+		return new PTPacket(buf);
+	}
 	return new PTPacket(buffer);
 }
 

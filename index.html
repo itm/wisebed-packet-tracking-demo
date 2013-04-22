@@ -77,6 +77,7 @@
 	<script type="text/javascript" src="bootstrap.js"></script>
 	
 	<script type="text/javascript" src="pt_packet.js"></script>
+	<script type="text/javascript" src="six_lowpan_packet.js"></script>
 	<script type="text/javascript" src="wiseml.js"></script>
 	<script type="text/javascript" src="d3.v3.js"></script>
 
@@ -241,18 +242,22 @@
 		WiseGuiUserScript.prototype.onmessage = function(message) {
 
 			var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) { return c.charCodeAt(0); }));
-			var packet = PTPacket.parse(payload);
 
-			var sourceNode = this.macToNode[''+packet.getSource()];
-			var targetNode = this.macToNode[''+packet.getDestination()];
+			if (payload[0] == PTPacket.PACKET_TYPE) {
 
-			var cssClass = "c" + (packet.getTag() % this.colors);
-			var markerId = "marker" + (packet.getTag() % this.colors);
+				var packet = PTPacket.parse(payload);
 
-			var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
-			var self = this;
-			
-			window.setTimeout(function() { self.removeLink(link); }, 1500);
+				var sourceNode = this.macToNode[''+packet.getSource()];
+				var targetNode = this.macToNode[''+packet.getDestination()];
+
+				var cssClass = "c" + (packet.getTag() % this.colors);
+				var markerId = "marker" + (packet.getTag() % this.colors);
+
+				var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
+				var self = this;
+				
+				window.setTimeout(function() { self.removeLink(link); }, 1500);
+			}
 		};
 
 		WiseGuiUserScript.prototype.onopen = function(event) {
@@ -275,11 +280,61 @@
 				lastTag = (lastTag +1) % Number.MAX_VALUE;
 			}
 
-			var payload = new Uint8Array(2);
+			//108 32 132 255 255 0 207 0 23
+			//107 59 2 16 150 58 2 133 0 57 38 0 0 0 0 1 1 32 132 0 0 0 0
+			// tf (4.&5. Bit des ersten Bytes) = 1
+			// 
+
+			var packetBytes = [
+				0x6c,
+				0x21,
+				0x18,
+				0xff,
+				0xff,
+				0x00,
+				0xc0,
+				0x00,
+				0x17,
+				0x6b,
+				0x3b,
+				0x04,
+				0x60,
+				0x2f,
+				0x3a,
+				0x02,
+				0x85,
+				0x00,
+				0x37,
+				0xfe,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x01,
+				0x01,
+				0x21,
+				0x18,
+				0x00,
+				0x00,
+				0x00,
+				0x00
+			];
+
+			//var packetBytes = [108, 32, 132, 255, 255, 0, 207, 0, 23, 107, 59, 2, 16, 150, 58, 2, 133, 0, 57, 38, 0, 0, 0, 0, 1, 1, 32, 132, 0, 0, 0, 0];
+			var packet = PTPacket.parse(packetBytes);
+			console.log(packet.getSource().toString(16));
+			console.log(packet.getDestination().toString(16));
+			console.log(packet.getPayload());
+
+			var lowpanPacket = SixLowPanPacket.parse(packet.getPayload());
+			console.log(lowpanPacket.toString());
+
+			/*var payload = new Uint8Array(2);
 			payload[0] = (lastTag >> 8) & 255;
 			payload[1] = (lastTag >> 0) & 255;
 
 			var packet = PTPacket.create(srcNodeUrn.getMac(), dstNodeUrn.getMac(), payload);
+			*/
 			
 			var base64EncodedPacket = btoa(String.fromCharCode.apply(null, packet.buffer));
 			var message = {
