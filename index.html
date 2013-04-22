@@ -106,8 +106,7 @@
 			    .size([width, height])
 			    .nodes([]) // initialize with a single node
 			    .linkDistance(30)
-			    .charge(-60)
-			    .on("tick", tick);
+			    .charge(-60);
 
 			var svg = d3.select("#DemoCanvas").append("svg")
 			    .attr("width", width)
@@ -134,22 +133,7 @@
 			this.node = node;
 			this.link = link;
 
-			this.redraw();
-
 			var self = this;
-
-			function tick() {
-			  self.link
-			      .attr("x1", function(d) { return d.source.x; })
-			      .attr("y1", function(d) { return d.source.y; })
-			      .attr("x2", function(d) { return d.target.x; })
-			      .attr("y2", function(d) { return d.target.y; })
-			      .attr("style", function(d) { return d.style; });
-
-			  self.node
-			      .attr("cx", function(d) { return d.x; })
-			      .attr("cy", function(d) { return d.y; });
-			}
 
 			// TODO: load WiseML from testbed
 			wiseml.setup.node
@@ -171,30 +155,6 @@
 			);
 			*/
 		};
-
-		WiseGuiUserScript.prototype.redraw = function() {
-
-			/*
-			this.link = this.link.data(this.links);
-
-			this.link
-				.enter()
-				.insert("line", ".node")
-				.attr("class", "link");
-
-			this.node = this.svg.selectAll(".node");
-			this.node = this.node.data(this.nodes);
-
-			this.node
-				.enter()
-				.insert("circle", ".cursor")
-				.attr("class", "node")
-				.attr("r", 15)
-				.call(this.force.drag);
-
-			this.force.start();
-			*/
-		}
 
 		WiseGuiUserScript.prototype.mapPosXY = function(node) {
 			return {
@@ -221,9 +181,10 @@
 				.insert("circle", ".cursor")
 				.attr("class", "node")
 				.attr("r", 15)
-				.call(this.force.drag);
+				.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
 
-			this.force.start(); // ?
+			this.force.start();
 		}
 
 		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode,color) {
@@ -245,9 +206,12 @@
 				.enter()
 				.insert("line", ".link")
 				.attr("class", "link")
-				.attr("style", newLink.style);
-
-			this.force.start();
+				.attr("style", newLink.style)
+				.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; })
+				.attr("style", function(d) { return d.style; });
 
 			return newLink;
 		}
@@ -258,8 +222,6 @@
 			
 			this.link = this.link.data(this.links);
 			this.link.exit().remove();
-			
-			this.force.start();
 		};
 
 		WiseGuiUserScript.prototype.stop = function() {
