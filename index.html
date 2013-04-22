@@ -40,7 +40,8 @@
 		}
 
 		.link {
-			
+			stroke: rgb(0,0,0);
+			stroke-width: 4;
 		}
 
 	</style>
@@ -102,40 +103,30 @@
 
 			var fill = d3.scale.category20();
 
-			var force = d3.layout.force()
+			this.nodes = [];
+			this.links = [];
+
+			this.force = d3.layout.force()
 			    .size([width, height])
-			    .nodes([]) // initialize with a single node
+			    .nodes(this.nodes)
+			    .links(this.links)
 			    .linkDistance(30)
-			    .charge(-60);
+			    .charge(-60)
+			    .start();
 
-			var svg = d3.select("#DemoCanvas").append("svg")
+			this.svg = d3.select("#DemoCanvas").append("svg")
 			    .attr("width", width)
 			    .attr("height", height);
 
-			svg.append("rect")
+			this.svg.append("rect")
 			    .attr("width", width)
 			    .attr("height", height);
 
-			var nodes = force.nodes(),
-			    links = force.links(),
-			    node = svg.selectAll(".node"),
-			    link = svg.selectAll(".link");
-
-			var cursor = svg.append("circle")
-			    .attr("r", 30)
-			    .attr("transform", "translate(-100,-100)")
-			    .attr("class", "cursor");
-
-			this.svg = svg;
-			this.force = force;
-			this.nodes = nodes;
-			this.links = links;
-			this.node = node;
-			this.link = link;
-
-			var self = this;
+			this.node = this.svg.selectAll(".node");
+			this.link = this.svg.selectAll(".link");
 
 			// TODO: load WiseML from testbed
+			var self = this;
 			wiseml.setup.node
 				.filter(function(node) { return node.nodeType == "isense48"; })
 				.forEach(function(node) {
@@ -143,6 +134,18 @@
 					var mac = new NodeUrn(node.id).getMac();
 					self.macToNode[''+mac] = node;
 				});
+
+			/*
+			var last = undefined;
+			wiseml.setup.node
+				.filter(function(node) { return node.nodeType == "isense48"; })
+				.forEach(function(node) {
+					if (last) {
+						self.addLink(last, node, {r:0,g:0,b:0});
+					}
+					last = node;
+				});
+			*/
 
 			/*
 			var self = this;
@@ -170,15 +173,13 @@
 			
 			this.nodeToD3Node[sourceNode.id] = node;
 			this.nodes.push(node);
-
-			//this.redraw();
 			
 			this.node = this.svg.selectAll('.node');
 			this.node = this.node.data(this.nodes, function(node) { return node.nodeUrn; });
 
 			this.node
 				.enter()
-				.insert("circle", ".cursor")
+				.insert("circle", ".circle")
 				.attr("class", "node")
 				.attr("r", 15)
 				.attr("cx", function(d) { return d.x; })
@@ -186,6 +187,8 @@
 
 			this.force.start();
 		}
+
+		WiseGuiUserScript.prototype.linkIdFun = function(o) { return o.linkId; }
 
 		WiseGuiUserScript.prototype.addLink = function (sourceNode,targetNode,color) {
 			
@@ -200,7 +203,7 @@
 			this.links.push(newLink);
 
 			this.link = this.svg.selectAll('.link');
-			this.link = this.link.data(this.links, function(o) { return o.linkId; });
+			this.link = this.link.data(this.links, this.linkIdFun);
 
 			this.link
 				.enter()
@@ -213,15 +216,21 @@
 				.attr("y2", function(d) { return d.target.y; })
 				.attr("style", function(d) { return d.style; });
 
+			this.force.start();
+
 			return newLink;
 		}
 
 		WiseGuiUserScript.prototype.removeLink = function (link) {
 			
-			this.links.splice(this.links.indexOf(link), 1);
+			console.log(link);
+			//console.log(this.links[this.links.indexOf(link)]);
+			console.log(this.links.splice(this.links.indexOf(link), 1));
 			
-			this.link = this.link.data(this.links);
+			this.link = this.link.data(this.links, this.linkIdFun);
 			this.link.exit().remove();
+
+			this.force.start();
 		};
 
 		WiseGuiUserScript.prototype.stop = function() {
