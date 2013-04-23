@@ -14,7 +14,12 @@ WiseGuiUserScript = function() {
 WiseGuiUserScript.prototype.start = function(env) {
 	
 	console.log("WiseGuiUserScript.start()");
+
 	this.env = env;
+	this.testbedId = env.testbedId;
+	this.experimentId = env.experimentId;
+	this.outputDiv = env.outputDiv;
+
 
 	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
@@ -132,12 +137,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 
 	console.log('WiseGuiUserScript.startDemo()');
 
-	this.testbedId = this.env.testbedId;
-	this.experimentId = this.env.experimentId;
-	this.outputDiv = this.env.outputDiv;
-
-	var width = this.outputDiv.width();
-	var height = this.outputDiv.height();
+	var width = 930;
+	var height = 500;
 
 	this.nodes = [];
 	this.links = [];
