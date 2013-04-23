@@ -18,20 +18,19 @@ WiseGuiUserScript.prototype.start = function(env) {
 
 	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
-		{loaded:false, src:'pt_packet.js'},
-		{loaded:false, src:'six_lowpan_packet.js'},
-		{loaded:false, src:'wiseml.js'},
-		{loaded:false, src:'d3.v3.js'},
-		{loaded:false, src:'node_urn.js'}
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'pt_packet.js'},
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'six_lowpan_packet.js'},
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'wiseml.js'},
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'd3.v3.js'},
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'node_urn.js'},
+		{loaded:false, tagName: 'link', mimeType: 'text/css', src: this.scriptsBaseUrl + 'packet_tracking_demo.css'}
 	];
 	this.scriptsLoaded = [];
-
 	this.scriptsToLoad.reverse().forEach(function(script) {
 		
 		var self = this;
-		var url = this.scriptsBaseUrl + script.src;
 
-		this.loadScript(url, function(scriptNode) {
+		this.loadScript(script, function(scriptNode) {
 
 			script.loaded = true;
 			self.scriptsLoaded.push(scriptNode);
@@ -41,62 +40,53 @@ WiseGuiUserScript.prototype.start = function(env) {
 			}
 		});
 
-		/*
-		$.getScript(this.scriptsBaseUrl + script.src)
-			.done(function(scriptNode, textStatus) {
-
-				script.loaded = true;
-				self.scriptsLoaded.push(scriptNode);
-
-				if (self.ready()) {
-					self.startDemo();
-				}
-			})
-			.fail(function(jqxhr, settings, exception) {
-				console.log(jqXHR);
-				console.log(settings);
-				console.log(exception);
-			});
-		*/
-		
-		/*
-		$.getScript(this.scriptsBaseUrl + script.src, function(scriptNode, textStatus, jqXHR) {
-			
-			script.loaded = true;
-			self.scriptsLoaded.push(scriptNode);
-
-			if (self.ready()) {
-				self.startDemo();
-			}
-		});
-		*/
 	}, this);
+
+	this.loadCss(this.scriptsBaseUrl + 'packet_tracking_demo.css', function() {}, function(url) {
+		window.alert('Failed to load css file: ' + url);
+	});
 }
 
-WiseGuiUserScript.prototype.loadScript = function(url, callback){
+WiseGuiUserScript.prototype.loadCss = function(url, success, error) {
+	var link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.media = 'screen';
+	link.href = url;
 
-    var script = document.createElement("script")
-    script.type = "text/javascript";
+	link.onerror = function(){
+		error(url);
+	}
+	link.onload = function(){
+        success(link);
+    };
 
-    if (script.readyState){  //IE
+    document.head.appendChild(link);
+}
+
+WiseGuiUserScript.prototype.loadScript = function(script, type, callback){
+
+    var scriptNode = document.createElement(script.tagName);
+    scriptNode.type = script.mimeType;
+
+    if (scriptNode.readyState){  //IE
 
         script.onreadystatechange = function(){
-        	if (script.readyState == "loaded" || script.readyState == "complete"){
-                script.onreadystatechange = null;
-                callback(script);
+        	if (scriptNode.readyState == "loaded" || scriptNode.readyState == "complete"){
+                scriptNode.onreadystatechange = null;
+                callback(scriptNode);
             }
         };
     } else {  //Others
     	script.onerror = function(){
-    		window.alert('Failed to load script: ' + url);
+    		window.alert('Failed to load script: ' + script.src);
     	}
         script.onload = function(){
-            callback(script);
+            callback(scriptNode);
         };
     }
 
-    script.src = url;
-    document.getElementsByTagName("head")[0].appendChild(script);
+    scriptNode.src = script.src;
+    document.head.appendChild(scriptNode);
 }
 
 WiseGuiUserScript.prototype.ready = function() {
