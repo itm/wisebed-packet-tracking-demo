@@ -21,7 +21,8 @@ WiseGuiUserScript.prototype.start = function(env) {
 		{loaded:false, src:'pt_packet.js'},
 		{loaded:false, src:'six_lowpan_packet.js'},
 		{loaded:false, src:'wiseml.js'},
-		{loaded:false, src:'d3.v3.js'}
+		{loaded:false, src:'d3.v3.js'},
+		{loaded:false, src:'node_urn.js'}
 	];
 	this.scriptsLoaded = [];
 
@@ -78,14 +79,19 @@ WiseGuiUserScript.prototype.loadScript = function(url, callback){
     script.type = "text/javascript";
 
     if (script.readyState){  //IE
+
         script.onreadystatechange = function(){
-            if (script.readyState == "loaded" || script.readyState == "complete"){
+        	if (script.readyState == "loaded" || script.readyState == "complete"){
                 script.onreadystatechange = null;
                 callback(script);
             }
         };
     } else {  //Others
+    	script.onerror = function(){
+    		window.alert('Failed to load script: ' + url);
+    	}
         script.onload = function(){
+        	console.log(script.readyState);
             callback(script);
         };
     }
