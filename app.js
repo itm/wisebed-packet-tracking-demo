@@ -26,8 +26,21 @@ WiseGuiUserScript.prototype.start = function(env) {
 	this.scriptsLoaded = [];
 
 	this.scriptsToLoad.reverse().forEach(function(script) {
+		
 		var self = this;
+		var url = this.scriptsBaseUrl + script.src;
 
+		this.loadScript(url, function(scriptNode) {
+
+			script.loaded = true;
+			self.scriptsLoaded.push(scriptNode);
+
+			if (self.ready()) {
+				self.startDemo();
+			}
+		});
+
+		/*
 		$.getScript(this.scriptsBaseUrl + script.src)
 			.done(function(scriptNode, textStatus) {
 
@@ -43,6 +56,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 				console.log(settings);
 				console.log(exception);
 			});
+		*/
 		
 		/*
 		$.getScript(this.scriptsBaseUrl + script.src, function(scriptNode, textStatus, jqXHR) {
@@ -56,6 +70,28 @@ WiseGuiUserScript.prototype.start = function(env) {
 		});
 		*/
 	}, this);
+}
+
+WiseGuiUserScript.prototype.loadScript = function(url, callback){
+
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" || script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback(script);
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback(script);
+        };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
 }
 
 WiseGuiUserScript.prototype.ready = function() {
