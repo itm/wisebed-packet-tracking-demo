@@ -91,7 +91,6 @@ WiseGuiUserScript.prototype.loadScript = function(url, callback){
     		window.alert('Failed to load script: ' + url);
     	}
         script.onload = function(){
-        	console.log(script.readyState);
             callback(script);
         };
     }
