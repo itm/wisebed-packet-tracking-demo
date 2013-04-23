@@ -136,16 +136,7 @@
 			}
 		};
 
-		$(function() {
-
-			var env = {
-				testbedId : 1,
-				experimentId : 2,
-				outputDiv : $("#DemoCanvas")
-			};
-
-			var userScript = new WiseGuiUserScript();
-			userScript.start(env);
+		function startPacketGenerator() {
 
 			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
 			var experimentNodes = isense48Nodes.slice(0, isense48Nodes.length);
@@ -174,6 +165,27 @@
 				}
 				
 			}, delay);
+		}
+
+		$(function() {
+
+			var env = {
+				testbedId : 1,
+				experimentId : 2,
+				outputDiv : $("#DemoCanvas")
+			};
+
+			var userScript = new WiseGuiUserScript();
+			userScript.start(env);
+
+			var startSchedule = window.setInterval(function() {
+
+				if (userScript.ready()) {
+					window.clearInterval(startSchedule);
+					startPacketGenerator();
+				}
+				
+			}, 1000);
 		})
 	</script>
 

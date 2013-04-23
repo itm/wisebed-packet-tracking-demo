@@ -32,15 +32,18 @@ WiseGuiUserScript.prototype.start = function(env) {
 			script.loaded = true;
 			self.scriptsLoaded.push(scriptNode);
 
-			var reduceFun = function(previousValue, currentValue, index, array){
-				return previousValue + array[index].loaded ? 1 : 0;
-			};
-
-			if (self.scriptsToLoad.reduce(reduceFun, 0) == self.scriptsToLoad.length) {
+			if (self.ready()) {
 				self.startDemo();
 			}
 		});
 	}, this);
+}
+
+WiseGuiUserScript.prototype.ready = function() {
+	var reduceFun = function(previousValue, currentValue, index, array){
+		return previousValue + array[index].loaded ? 1 : 0;
+	};
+	return this.scriptsToLoad.reduce(reduceFun, 0) == this.scriptsToLoad.length;
 }
 
 WiseGuiUserScript.prototype.startDemo = function() {
