@@ -27,6 +27,24 @@ WiseGuiUserScript.prototype.start = function(env) {
 
 	this.scriptsToLoad.reverse().forEach(function(script) {
 		var self = this;
+
+		$.getScript(this.scriptsBaseUrl + script.src)
+			.done(function(scriptNode, textStatus) {
+
+				script.loaded = true;
+				self.scriptsLoaded.push(scriptNode);
+
+				if (self.ready()) {
+					self.startDemo();
+				}
+			})
+			.fail(function(jqxhr, settings, exception) {
+				console.log(jqXHR);
+				console.log(settings);
+				console.log(exception);
+			});
+		
+		/*
 		$.getScript(this.scriptsBaseUrl + script.src, function(scriptNode, textStatus, jqXHR) {
 			
 			script.loaded = true;
@@ -36,6 +54,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 				self.startDemo();
 			}
 		});
+		*/
 	}, this);
 }
 
