@@ -102,7 +102,7 @@ WiseGuiUserScript.prototype.ready = function() {
 	var reduced = this.scriptsToLoad.reduce(reduceFun, 0);
 	var ready = reduced == this.scriptsToLoad.length;
 	if (ready) {
-		console.log("Ready to rock steady!");
+		console.log("All scripts loaded!");
 	}
 	return ready;
 }
@@ -151,7 +151,7 @@ WiseGuiUserScript.prototype.startDemo = function() {
 	    .start();
 
 	this.svg = d3
-		.select(this.outputDiv.id)
+		.select('#' + this.outputDiv.attr('id'))
 		.append("svg")
 	    .attr("width", width)
 	    .attr("height", height);
