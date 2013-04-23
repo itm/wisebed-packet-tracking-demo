@@ -111,7 +111,7 @@
 
 			var packet = PTPacket.create(srcNodeUrn.getMac(), dstNodeUrn.getMac(), lowpanPacket.buffer);
 
-			console.log(packet.toString());
+			//console.log(packet.toString());
 
 			var base64EncodedPacket = btoa(String.fromCharCode.apply(null, packet.buffer));
 			var message = {
@@ -136,13 +136,11 @@
 			}
 		};
 
-		function startPacketGenerator() {
+		function startPacketGenerator(userScript) {
 
 			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
 			var experimentNodes = isense48Nodes.slice(0, isense48Nodes.length);
 			var experimentNodesUrns = experimentNodes.map(function(node) { return new NodeUrn(node.id); });
-			
-			console.log(experimentNodes);
 
 			var totalNumberOfPackets = 3000;
 			var delay = 500;
@@ -182,7 +180,7 @@
 
 				if (userScript.ready()) {
 					window.clearInterval(startSchedule);
-					startPacketGenerator();
+					startPacketGenerator(userScript);
 				}
 				
 			}, 1000);

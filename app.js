@@ -41,9 +41,14 @@ WiseGuiUserScript.prototype.start = function(env) {
 
 WiseGuiUserScript.prototype.ready = function() {
 	var reduceFun = function(previousValue, currentValue, index, array){
-		return previousValue + array[index].loaded ? 1 : 0;
+		return previousValue + (currentValue.loaded ? 1 : 0);
 	};
-	return this.scriptsToLoad.reduce(reduceFun, 0) == this.scriptsToLoad.length;
+	var reduced = this.scriptsToLoad.reduce(reduceFun, 0);
+	var ready = reduced == this.scriptsToLoad.length;
+	if (ready) {
+		console.log("Ready to rock steady!");
+	}
+	return ready;
 }
 
 WiseGuiUserScript.prototype.startDemo = function() {
