@@ -8,7 +8,6 @@ var PTPacket = function(buffer) {
 	this.getDestination = function() { return (buffer[3] << 8) + buffer[4]; }
 	this.getLinkMetric  = function() { return (buffer[5] << 8) + buffer[6]; }
 	this.getLength      = function() { return (buffer[7] << 8) + buffer[8]; }
-	this.getTag         = function() { return (buffer[9] << 8) + buffer[10]; } // TODO anpassing
 	this.getPayload     = function() {
 		var payload = new Uint8Array(buffer.length - 9);
 		for (var pos = 9; pos<buffer.length; pos++) {

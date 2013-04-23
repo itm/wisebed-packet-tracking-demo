@@ -20,12 +20,33 @@ var SixLowPanPacket = function(buffer) {
 	
 	this.getFlowLabel = function() {
 		var tf = this.getHeaders().tf;
-		if (tf == 0 || tf == 1) {
+		if (tf == 0) {
+			return  ((this.buffer[3] & 0x0F) << 16) + // 0b00001111
+					((this.buffer[4] & 0xFF) <<  8) + // 0b11111111
+					((this.buffer[5] & 0xFF) <<  0);  // 0b11111111
+		} else if (tf == 1) {
 			return  ((this.buffer[2] & 0x0F) << 16) + // 0b00001111
-					((this.buffer[1] & 0xFF) <<  8) + // 0b11111111
-					((this.buffer[1] & 0xFF) <<  0);  // 0b11111111
+					((this.buffer[3] & 0xFF) <<  8) + // 0b11111111
+					((this.buffer[4] & 0xFF) <<  0);  // 0b11111111
 		} else {
 			return undefined;
+		}
+	}
+
+	this.setFlowLabel = function(flowLabel) {
+		var tf = this.getHeaders().tf;
+		if (tf == 0) {
+			this.buffer[3] = ((flowLabel >> 16) & 0x0F) | (this.buffer[3] & 0xF0);
+			this.buffer[4] = ((flowLabel >> 8) & 0xFF);
+			this.buffer[5] = ((flowLabel >> 0) & 0xFF);
+		} else if (tf == 1) {
+			this.buffer[2] = ((flowLabel >> 16) & 0x0F) | (this.buffer[2] & 0xF0);
+			this.buffer[3] = ((flowLabel >> 8) & 0xFF);
+			this.buffer[4] = ((flowLabel >> 0) & 0xFF);
+		} else {
+			throw {
+				description : "No flow label allowed if tf = " + tf
+			};
 		}
 	}
 
@@ -206,10 +227,22 @@ var SixLowPanPacket = function(buffer) {
 
 	this.toString = function() {
 		
+		var uint8ArrayToString = function(buffer) {
+			var ret = "[";
+			for (var i=0; i<buffer.length; i++) {
+				ret += ("0x" + buffer[i].toString(16));
+				if (i<buffer.length-1) {
+					ret += ",";
+				}
+			}
+			ret += "]";
+			return ret;
+		};
+
 		var headers = this.getHeaders();
 		var sourceAndDestination = this.getSourceAndDestination();
-		var source = this.bufferToInt(sourceAndDestination.source);
-		var destination = this.bufferToInt(sourceAndDestination.destination);
+		var source = uint8ArrayToString(sourceAndDestination.source);
+		var destination = uint8ArrayToString(sourceAndDestination.destination);
 
 		return "SixLowPanPacket{" +
 			"tf=" + headers.tf + "," +
@@ -221,7 +254,8 @@ var SixLowPanPacket = function(buffer) {
 			"dac=" + headers.dac + "," + 
 			"dam=" + headers.dam + "," + 
 			"src=" + source + "," + 
-			"dst=" + destination +
+			"dst=" + destination + "," +
+			"flowlabel=0x" + this.getFlowLabel().toString(16) +
 		"}";
 	}
 }
