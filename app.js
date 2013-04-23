@@ -198,8 +198,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 	this.wisemlBoundingBox.width = this.wisemlBoundingBox.maxX - this.wisemlBoundingBox.minX;
 	this.wisemlBoundingBox.height = this.wisemlBoundingBox.maxY - this.wisemlBoundingBox.minY;
 
-	this.scaleFactors.x = - (width / this.wisemlBoundingBox.width); // negative because origin in UZL testbed is on upper right corner
-	this.scaleFactors.y = height / this.wisemlBoundingBox.height;
+	this.scaleFactors.x = (- (width / this.wisemlBoundingBox.width)) * 0.9; // negative because origin in UZL testbed is on upper right corner
+	this.scaleFactors.y = (height / this.wisemlBoundingBox.height) * 0.9;
 	this.scaleFactors.offsetX = width;
 	this.scaleFactors.offsetY = 0;
 
