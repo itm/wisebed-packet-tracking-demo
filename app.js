@@ -16,7 +16,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 	console.log("Starting user script...");
 	this.env = env;
 
-	this.scriptsBaseUrl = 'https://raw.github.com/itm/wisebed-packet-tracking-demo/master/';
+	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
 		{loaded:false, src:'pt_packet.js'},
 		{loaded:false, src:'six_lowpan_packet.js'},
