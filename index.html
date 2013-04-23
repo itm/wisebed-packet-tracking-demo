@@ -75,12 +75,12 @@
 	
 	<script type="text/javascript" src="jquery-1.9.1.js"></script>
 	<script type="text/javascript" src="bootstrap.js"></script>
+
+</head>
+
+<body>
 	
 	<script type="text/javascript" src="app.js"></script>
-	<script type="text/javascript" src="pt_packet.js"></script>
-	<script type="text/javascript" src="six_lowpan_packet.js"></script>
-	<script type="text/javascript" src="wiseml.js"></script>
-	<script type="text/javascript" src="d3.v3.js"></script>
 
 	<script type="text/javascript">
 
@@ -138,15 +138,6 @@
 
 		$(function() {
 
-			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
-			var experimentNodes = isense48Nodes.slice(0, isense48Nodes.length);
-			var experimentNodesUrns = experimentNodes.map(function(node) { return new NodeUrn(node.id); });
-			
-			console.log(experimentNodes);
-
-			var totalNumberOfPackets = 3000;
-			var delay = 500;
-
 			var env = {
 				testbedId : 1,
 				experimentId : 2,
@@ -155,6 +146,15 @@
 
 			var userScript = new WiseGuiUserScript();
 			userScript.start(env);
+
+			var isense48Nodes = wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
+			var experimentNodes = isense48Nodes.slice(0, isense48Nodes.length);
+			var experimentNodesUrns = experimentNodes.map(function(node) { return new NodeUrn(node.id); });
+			
+			console.log(experimentNodes);
+
+			var totalNumberOfPackets = 3000;
+			var delay = 500;
 
 			var i=0, j=0, k=0;
 			var schedule;
@@ -177,9 +177,6 @@
 		})
 	</script>
 
-</head>
-
-<body>
 	<div id="DemoCanvas"></div>
 	<div id="DivPacketCount"></div>
 </body>

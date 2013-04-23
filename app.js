@@ -1,9 +1,3 @@
-/*
-this.d3 = document.createElement('script');
-this.d3.src = 'http://wisebed.itm.uni-luebeck.de/js/lib/d3/d3-2.8.0.js';
-document.body.appendChild(this.d3);
-*/
-
 WiseGuiUserScript = function() {
 	console.log("WiseGuiUserScript instantiated...");
 	this.testbedId = null;
@@ -20,10 +14,40 @@ WiseGuiUserScript = function() {
 WiseGuiUserScript.prototype.start = function(env) {
 	
 	console.log("Starting user script...");
+	this.env = env;
 
-	this.testbedId = env.testbedId;
-	this.experimentId = env.experimentId;
-	this.outputDiv = env.outputDiv;
+	this.scriptsBaseUrl = 'https://raw.github.com/itm/wisebed-packet-tracking-demo/master/';
+	this.scriptsToLoad = [
+		{loaded:false, src:'pt_packet.js'},
+		{loaded:false, src:'six_lowpan_packet.js'},
+		{loaded:false, src:'wiseml.js'},
+		{loaded:false, src:'d3.v3.js'}
+	];
+	this.scriptsLoaded = [];
+
+	this.scriptsToLoad.reverse().forEach(function(script) {
+		var self = this;
+		$.getScript(this.scriptsBaseUrl + script.src, function(scriptNode, textStatus, jqXHR) {
+			
+			script.loaded = true;
+			self.scriptsLoaded.push(scriptNode);
+
+			var reduceFun = function(previousValue, currentValue, index, array){
+				return previousValue + array[index].loaded ? 1 : 0;
+			};
+
+			if (self.scriptsToLoad.reduce(reduceFun, 0) == self.scriptsToLoad.length) {
+				self.startDemo();
+			}
+		});
+	}, this);
+}
+
+WiseGuiUserScript.prototype.startDemo = function() {
+
+	this.testbedId = this.env.testbedId;
+	this.experimentId = this.env.experimentId;
+	this.outputDiv = this.env.outputDiv;
 
 	var width = $('#DemoCanvas').width();
 	var height = $('#DemoCanvas').height();
@@ -157,6 +181,10 @@ WiseGuiUserScript.prototype.removeLink = function (link) {
 
 WiseGuiUserScript.prototype.stop = function() {
 	console.log("Stopping user script...");
+
+	this.scriptsLoaded.forEach(function(script) {
+		document.body.removeChild(script);
+	}, this);
 	//this.webSocket.close();
 };
 
