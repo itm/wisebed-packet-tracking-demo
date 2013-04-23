@@ -9,6 +9,15 @@ WiseGuiUserScript = function() {
 	this.lastLinkId = 0;
 	this.colors = 12;
 	this.wiseml = null;
+	this.wisemlBoundingBox = {
+		minX : Number.MAX_VALUE,
+		minY : Number.MAX_VALUE,
+		maxX : Number.MIN_VALUE,
+		maxY : Number.MIN_VALUE,
+		width : undefined,
+		height : undefined
+	};
+	this.scaleFactors = { x : 1, y : 1, offsetX : 0, offsetY : 0 };
 };
 
 WiseGuiUserScript.prototype.start = function(env) {
@@ -137,8 +146,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 
 	console.log('WiseGuiUserScript.startDemo()');
 
-	var width = this.outputDiv.width();
-	var height = this.outputDiv.height();
+	var width = this.outputDiv.width() - 10;
+	var height = this.outputDiv.height() - 10;
 
 	this.nodes = [];
 	this.links = [];
@@ -174,9 +183,28 @@ WiseGuiUserScript.prototype.startDemo = function() {
 		.attr("d", "M 0 -5 L 10 0 L 0 5");
 
 	var self = this;
-	this.wiseml.setup.node
-		.filter(function(node) { return node.nodeType == "isense48"; })
-		.forEach(function(node) {
+	var experimentNodes = this.wiseml.setup.node.filter(function(node) { return node.nodeType == "isense48"; });
+
+	// determine max x,y coordinates in wiseml
+	experimentNodes.forEach(function(node) {
+		if (node.position.x < this.wisemlBoundingBox.minX) { this.wisemlBoundingBox.minX = node.position.x; }
+		if (node.position.y < this.wisemlBoundingBox.minY) { this.wisemlBoundingBox.minY = node.position.y; }
+		if (node.position.x > this.wisemlBoundingBox.maxX) { this.wisemlBoundingBox.maxX = node.position.x; }
+		if (node.position.y > this.wisemlBoundingBox.maxY) { this.wisemlBoundingBox.maxY = node.position.y; }
+	}, this);
+
+	console.log(this.wisemlBoundingBox);
+
+	this.wisemlBoundingBox.width = this.wisemlBoundingBox.maxX - this.wisemlBoundingBox.minX;
+	this.wisemlBoundingBox.height = this.wisemlBoundingBox.maxY - this.wisemlBoundingBox.minY;
+
+	this.scaleFactors.x = - (width / this.wisemlBoundingBox.width); // negative because origin in UZL testbed is on upper right corner
+	this.scaleFactors.y = height / this.wisemlBoundingBox.height;
+	this.scaleFactors.offsetX = width;
+	this.scaleFactors.offsetY = 0;
+
+	// add nodes to visualization
+	experimentNodes.forEach(function(node) {
 			self.addNode(node);
 			var mac = new NodeUrn(node.id).getMac();
 			self.macToNode[''+mac] = node;
@@ -198,8 +226,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 
 WiseGuiUserScript.prototype.mapPosXY = function(node) {
 	return {
-		x: node.position.x * 30,
-		y: node.position.y * 30
+		x : node.position.x * this.scaleFactors.x + this.scaleFactors.offsetX,
+		y : node.position.y * this.scaleFactors.y + this.scaleFactors.offsetY
 	};
 }
 
