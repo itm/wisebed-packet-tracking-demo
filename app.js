@@ -8,19 +8,18 @@ WiseGuiUserScript = function() {
 	this.macToNode = {};
 	this.lastLinkId = 0;
 	this.colors = 12;
-
+	this.wiseml = null;
 };
 
 WiseGuiUserScript.prototype.start = function(env) {
 	
-	console.log("Starting user script...");
+	console.log("WiseGuiUserScript.start()");
 	this.env = env;
 
 	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
 		{loaded:false, src: this.scriptsBaseUrl + 'pt_packet.js'},
 		{loaded:false, src: this.scriptsBaseUrl + 'six_lowpan_packet.js'},
-		{loaded:false, src: this.scriptsBaseUrl + 'wiseml.js'},
 		{loaded:false, src: this.scriptsBaseUrl + 'd3.v3.js'},
 		{loaded:false, src: this.scriptsBaseUrl + 'node_urn.js'}
 	];
@@ -35,7 +34,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 			self.scriptsLoaded.push(scriptNode);
 
 			if (self.ready()) {
-				self.startDemo();
+				self.loadWiseML();
 			}
 		});
 
@@ -108,14 +107,37 @@ WiseGuiUserScript.prototype.ready = function() {
 	return ready;
 }
 
+WiseGuiUserScript.prototype.loadWiseML = function() {
+
+	console.log('WiseGuiUserScript.loadWiseML()');
+
+	if (typeof WiseGui == 'undefined') {
+		this.wiseml = wiseml;
+		this.startDemo();
+	} else {
+		var self = this;
+		Wisebed.getWiseMLAsJSON(
+			this.testbedId,
+			this.experimentId,
+			function(wiseml) {
+				self.wiseml = wiseml;
+				self.startDemo();
+			},
+			function() {alert('Could not load WiseML');}
+		);
+	}
+}
+
 WiseGuiUserScript.prototype.startDemo = function() {
+
+	console.log('WiseGuiUserScript.startDemo()');
 
 	this.testbedId = this.env.testbedId;
 	this.experimentId = this.env.experimentId;
 	this.outputDiv = this.env.outputDiv;
 
-	var width = $('#DemoCanvas').width();
-	var height = $('#DemoCanvas').height();
+	var width = this.outputDiv.width();
+	var height = this.outputDiv.height();
 
 	this.nodes = [];
 	this.links = [];
@@ -129,7 +151,7 @@ WiseGuiUserScript.prototype.startDemo = function() {
 	    .start();
 
 	this.svg = d3
-		.select("#DemoCanvas")
+		.select(this.outputDiv.id)
 		.append("svg")
 	    .attr("width", width)
 	    .attr("height", height);
@@ -150,9 +172,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 		.append("svg:path")
 		.attr("d", "M 0 -5 L 10 0 L 0 5");
 
-	// TODO: load WiseML from testbed
 	var self = this;
-	wiseml.setup.node
+	this.wiseml.setup.node
 		.filter(function(node) { return node.nodeType == "isense48"; })
 		.forEach(function(node) {
 			self.addNode(node);
@@ -160,16 +181,18 @@ WiseGuiUserScript.prototype.startDemo = function() {
 			self.macToNode[''+mac] = node;
 		});
 
-	/*
-	var self = this;
-	this.webSocket = new Wisebed.WebSocket(
-	  this.testbedId,
-	  this.experimentId,
-	  function() {self.onmessage(arguments);},
-	  function() {self.onopen(arguments);},
-	  function() {self.onclosed(arguments);}
-	);
-	*/
+	if (typeof WiseGui != 'undefined') {
+		
+		var self = this;
+
+		this.webSocket = new Wisebed.WebSocket(
+			this.testbedId,
+			this.experimentId,
+			function() {self.onmessage(arguments);},
+			function() {self.onopen(arguments);},
+			function() {self.onclosed(arguments);}
+		);
+	}
 };
 
 WiseGuiUserScript.prototype.mapPosXY = function(node) {
@@ -245,7 +268,8 @@ WiseGuiUserScript.prototype.removeLink = function (link) {
 };
 
 WiseGuiUserScript.prototype.stop = function() {
-	console.log("Stopping user script...");
+
+	console.log('WiseGuiUserScript.stop()');
 
 	this.scriptsLoaded.forEach(function(script) {
 		document.body.removeChild(script);
@@ -253,26 +277,32 @@ WiseGuiUserScript.prototype.stop = function() {
 	//this.webSocket.close();
 };
 
-WiseGuiUserScript.prototype.onmessage = function(message) {
+WiseGuiUserScript.prototype.onmessage = function(messages) {
 
-	var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) { return c.charCodeAt(0); }));
+	console.log('WiseGuiUserScript.onmessage()');
 
-	if (payload[0] == PTPacket.PACKET_TYPE) {
+	for (var i=0; i<messages.length; i++) {
 
-		var packet = PTPacket.parse(payload);
-		var lowpanPacket = SixLowPanPacket.parse(packet.getPayload());
-		var packetTrackingTag = lowpanPacket.getFlowLabel();
+		var message = messages[i];
+		var payload = new Uint8Array(atob(message.payloadBase64).split("").map(function(c) { return c.charCodeAt(0); }));
 
-		var sourceNode = this.macToNode[''+packet.getSource()];
-		var targetNode = this.macToNode[''+packet.getDestination()];
+		if (payload[0] == PTPacket.PACKET_TYPE) {
 
-		var cssClass = "c" + (packetTrackingTag % this.colors);
-		var markerId = "marker" + (packetTrackingTag % this.colors);
+			var packet = PTPacket.parse(payload);
+			var lowpanPacket = SixLowPanPacket.parse(packet.getPayload());
+			var packetTrackingTag = lowpanPacket.getFlowLabel();
 
-		var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
-		var self = this;
-		
-		window.setTimeout(function() { self.removeLink(link); }, 1500);
+			var sourceNode = this.macToNode[''+packet.getSource()];
+			var targetNode = this.macToNode[''+packet.getDestination()];
+
+			var cssClass = "c" + (packetTrackingTag % this.colors);
+			var markerId = "marker" + (packetTrackingTag % this.colors);
+
+			var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
+			var self = this;
+			
+			window.setTimeout(function() { self.removeLink(link); }, 1500);
+		}
 	}
 };
 
