@@ -23,18 +23,18 @@
 	stroke-width: 4;
 }
 
-.c0  { stroke: rgb(054,097,171); stroke-width: 4; }
-.c1  { stroke: rgb(186,215,187); stroke-width: 4; }
-.c2  { stroke: rgb(220,150,187); stroke-width: 4; }
-.c3  { stroke: rgb(223,184,043); stroke-width: 4; }
-.c4  { stroke: rgb(251,242,095); stroke-width: 4; }
-.c5  { stroke: rgb(160,155,202); stroke-width: 4; }
-.c6  { stroke: rgb(161,082,042); stroke-width: 4; }
-.c7  { stroke: rgb(216,130,130); stroke-width: 4; }
-.c8  { stroke: rgb(180,204,236); stroke-width: 4; }
-.c9  { stroke: rgb(089,153,080); stroke-width: 4; }
-.c10 { stroke: rgb(151,049,061); stroke-width: 4; }
-.c11 { stroke: rgb(102,053,119); stroke-width: 4; }
+.c0  { stroke: rgb(054,097,171); stroke-width: 3; }
+.c1  { stroke: rgb(186,215,187); stroke-width: 3; }
+.c2  { stroke: rgb(220,150,187); stroke-width: 3; }
+.c3  { stroke: rgb(223,184,043); stroke-width: 3; }
+.c4  { stroke: rgb(251,242,095); stroke-width: 3; }
+.c5  { stroke: rgb(160,155,202); stroke-width: 3; }
+.c6  { stroke: rgb(161,082,042); stroke-width: 3; }
+.c7  { stroke: rgb(216,130,130); stroke-width: 3; }
+.c8  { stroke: rgb(180,204,236); stroke-width: 3; }
+.c9  { stroke: rgb(089,153,080); stroke-width: 3; }
+.c10 { stroke: rgb(151,049,061); stroke-width: 3; }
+.c11 { stroke: rgb(102,053,119); stroke-width: 3; }
 
 #marker0  { fill: rgb(054,097,171); }
 #marker1  { fill: rgb(186,215,187); }
