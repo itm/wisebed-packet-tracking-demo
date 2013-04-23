@@ -299,10 +299,20 @@ WiseGuiUserScript.prototype.onmessage = function(messages) {
 			var cssClass = "c" + (packetTrackingTag % this.colors);
 			var markerId = "marker" + (packetTrackingTag % this.colors);
 
-			var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
-			var self = this;
-			
-			window.setTimeout(function() { self.removeLink(link); }, 1500);
+			if (sourceNode != undefined && targetNode != undefined) {
+
+				var link = this.addLink(sourceNode, targetNode, cssClass, markerId);
+				var self = this;
+				
+				window.setTimeout(function() { self.removeLink(link); }, 1500);
+			} else {
+				if (sourceNode == undefined) {
+					console.log("Undefined source node from packet: " + packet.toString());
+				}
+				if (targetNode == undefined) {
+					console.log("Undefined target node from packet: " + packet.toString());
+				}
+			}
 		}
 	}
 };
