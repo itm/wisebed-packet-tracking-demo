@@ -244,7 +244,7 @@ WiseGuiUserScript.prototype.addNode = function (sourceNode) {
 		.enter()
 		.insert("circle", ".circle")
 		.attr("class", "node")
-		.attr("r", 15)
+		.attr("r", 10)
 		.attr("cx", function(d) { return d.x; })
 		.attr("cy", function(d) { return d.y; });
 
