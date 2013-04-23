@@ -18,11 +18,11 @@ WiseGuiUserScript.prototype.start = function(env) {
 
 	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'pt_packet.js'},
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'six_lowpan_packet.js'},
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'wiseml.js'},
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'd3.v3.js'},
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'node_urn.js'}
+		{loaded:false, src: this.scriptsBaseUrl + 'pt_packet.js'},
+		{loaded:false, src: this.scriptsBaseUrl + 'six_lowpan_packet.js'},
+		{loaded:false, src: this.scriptsBaseUrl + 'wiseml.js'},
+		{loaded:false, src: this.scriptsBaseUrl + 'd3.v3.js'},
+		{loaded:false, src: this.scriptsBaseUrl + 'node_urn.js'}
 	];
 	this.scriptsLoaded = [];
 	this.scriptsToLoad.reverse().forEach(function(script) {
@@ -47,6 +47,9 @@ WiseGuiUserScript.prototype.start = function(env) {
 }
 
 WiseGuiUserScript.prototype.loadCss = function(url, success, error) {
+	
+	console.log('Loading CSS ' + url + '...');
+
 	var link = document.createElement('link');
 	link.rel = 'stylesheet';
 	link.media = 'screen';
@@ -56,30 +59,35 @@ WiseGuiUserScript.prototype.loadCss = function(url, success, error) {
 		error(url);
 	}
 	link.onload = function(){
+		console.log('Loading CSS ' + url + ' done.');
         success(link);
     };
 
     document.head.appendChild(link);
 }
 
-WiseGuiUserScript.prototype.loadScript = function(script, type, callback){
+WiseGuiUserScript.prototype.loadScript = function(script, callback){
 
-    var scriptNode = document.createElement(script.tagName);
-    scriptNode.type = script.mimeType;
+	console.log('Loading script ' + script.src + '...');
+
+    var scriptNode = document.createElement('script');
+    scriptNode.type = 'text/javascript';
 
     if (scriptNode.readyState){  //IE
 
-        script.onreadystatechange = function(){
+        scriptNode.onreadystatechange = function(){
         	if (scriptNode.readyState == "loaded" || scriptNode.readyState == "complete"){
+        		console.log('Loading script ' + script.src + ' done.');
                 scriptNode.onreadystatechange = null;
                 callback(scriptNode);
             }
         };
     } else {  //Others
-    	script.onerror = function(){
+    	scriptNode.onerror = function(){
     		window.alert('Failed to load script: ' + script.src);
     	}
-        script.onload = function(){
+        scriptNode.onload = function(){
+        	console.log('Loading script ' + script.src + ' done.');
             callback(scriptNode);
         };
     }
