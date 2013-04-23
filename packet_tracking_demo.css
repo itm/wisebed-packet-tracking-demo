@@ -8,7 +8,7 @@
 
 .DemoCanvas {
 	background-size: 100% auto;
-	background-image: url(floorplan_testbed_uzl.png);
+	background-image: url(http://itm.github.io/wisebed-packet-tracking-demo/floorplan_testbed_uzl.png);
 	background-repeat: no-repeat;
 	border: 1px solid black;
 	width: 100%;
