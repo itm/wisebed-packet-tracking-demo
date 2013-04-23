@@ -22,8 +22,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'six_lowpan_packet.js'},
 		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'wiseml.js'},
 		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'd3.v3.js'},
-		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'node_urn.js'},
-		{loaded:false, tagName: 'link', mimeType: 'text/css', src: this.scriptsBaseUrl + 'packet_tracking_demo.css'}
+		{loaded:false, tagName: 'script', mimeType: 'text/javascript', src: this.scriptsBaseUrl + 'node_urn.js'}
 	];
 	this.scriptsLoaded = [];
 	this.scriptsToLoad.reverse().forEach(function(script) {
