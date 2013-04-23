@@ -19,7 +19,7 @@ WiseGuiUserScript.prototype.start = function(env) {
 	this.testbedId = env.testbedId;
 	this.experimentId = env.experimentId;
 	this.outputDiv = env.outputDiv;
-
+	this.outputDiv.addClass('DemoCanvas');
 
 	this.scriptsBaseUrl = 'http://itm.github.io/wisebed-packet-tracking-demo/';
 	this.scriptsToLoad = [
@@ -137,8 +137,8 @@ WiseGuiUserScript.prototype.startDemo = function() {
 
 	console.log('WiseGuiUserScript.startDemo()');
 
-	var width = 930;
-	var height = 500;
+	var width = this.outputDiv.width();
+	var height = this.outputDiv.height();
 
 	this.nodes = [];
 	this.links = [];
