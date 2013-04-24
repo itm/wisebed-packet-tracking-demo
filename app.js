@@ -76,6 +76,7 @@ WiseGuiUserScript.prototype.loadCss = function(url, success, error) {
         success(link);
     };
 
+    this.cssNode = link;
     document.head.appendChild(link);
 }
 
@@ -300,9 +301,11 @@ WiseGuiUserScript.prototype.stop = function() {
 
 	console.log('WiseGuiUserScript.stop()');
 
+	this.outputDiv.empty();
 	this.scriptsLoaded.forEach(function(script) {
-		document.body.removeChild(script);
+		document.head.removeChild(script);
 	}, this);
+	document.head.removeChild(this.cssNode);
 	//this.webSocket.close();
 };
 
