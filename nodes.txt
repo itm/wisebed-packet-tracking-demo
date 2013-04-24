@@ -18,4 +18,11 @@ urn:wisebed:uzl1:0x213c
 urn:wisebed:uzl1:0x2138
 urn:wisebed:uzl1:0x2130
 
-$.inArray(e.id, ["urn:wisebed:uzl1:0x2100","urn:wisebed:uzl1:0x2140","urn:wisebed:uzl1:0x2124","urn:wisebed:uzl1:0x2110","urn:wisebed:uzl1:0x210c","urn:wisebed:uzl1:0x212c","urn:wisebed:uzl1:0x213c","urn:wisebed:uzl1:0x2138","urn:wisebed:uzl1:0x2130"])
+["urn:wisebed:uzl1:0x2100","urn:wisebed:uzl1:0x2140","urn:wisebed:uzl1:0x2124","urn:wisebed:uzl1:0x2110","urn:wisebed:uzl1:0x210c","urn:wisebed:uzl1:0x212c","urn:wisebed:uzl1:0x213c","urn:wisebed:uzl1:0x2138","urn:wisebed:uzl1:0x2130"].indexOf(e.id) > -1
+
+urn:wisebed:uzl1:,BC69CE3E72FCA40A8E35C4F9DC81244F
+
+urn:wisebed:uzl1:0x2100,urn:wisebed:uzl1:0x2140,urn:wisebed:uzl1:0x2124,urn:wisebed:uzl1:0x2110,urn:wisebed:uzl1:0x210c,urn:wisebed:uzl1:0x212c,urn:wisebed:uzl1:0x213c,urn:wisebed:uzl1:0x2138,urn:wisebed:uzl1:0x2130
+
+export RES=urn:wisebed:uzl1:,BC69CE3E72FCA40A8E35C4F9DC81244F
+export TOFLASH=urn:wisebed:uzl1:0x2100,urn:wisebed:uzl1:0x2140,urn:wisebed:uzl1:0x2124,urn:wisebed:uzl1:0x2110,urn:wisebed:uzl1:0x210c,urn:wisebed:uzl1:0x212c,urn:wisebed:uzl1:0x213c,urn:wisebed:uzl1:0x2138,urn:wisebed:uzl1:0x2130
